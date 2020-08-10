@@ -8,8 +8,6 @@ import (
 	"text/tabwriter"
 	"text/template"
 	"unicode/utf8"
-
-	"github.com/Masterminds/sprig"
 )
 
 var helpCommand = &Command{
@@ -80,12 +78,12 @@ func ShowAppHelp(c *Context) error {
 	}
 
 	if c.App.ExtraInfo == nil {
-		HelpPrinter(c.App.Writer, tpl, c.App)
+		HelpPrinterCustom(c.App.Writer, tpl, c.App, funcMap)
 		return nil
 	}
 
 	customAppData := func() map[string]interface{} {
-		res := sprig.FuncMap()
+		res := funcMap
 		res["ExtraInfo"] = c.App.ExtraInfo
 		return res
 	}
@@ -191,7 +189,8 @@ func ShowCommandHelpAndExit(c *Context, command string, code int) {
 func ShowCommandHelp(ctx *Context, command string) error {
 	// show the subcommand help for a command with subcommands
 	if command == "" {
-		HelpPrinter(ctx.App.Writer, SubcommandHelpTemplate, ctx.App)
+		// HelpPrinterCustom(ctx.App.Writer, SubcommandHelpTemplate, ctx.App, nil)
+		HelpPrinterCustom(ctx.App.Writer, SubcommandHelpTemplate, ctx.App, funcMap)
 		return nil
 	}
 
@@ -202,7 +201,7 @@ func ShowCommandHelp(ctx *Context, command string) error {
 				templ = CommandHelpTemplate
 			}
 
-			HelpPrinter(ctx.App.Writer, templ, c)
+			HelpPrinterCustom(ctx.App.Writer, templ, c, funcMap)
 
 			return nil
 		}
@@ -367,4 +366,18 @@ func checkCommandCompletions(c *Context, name string) bool {
 
 	ShowCommandCompletions(c, name)
 	return true
+}
+
+var funcMap = map[string]interface{}{
+	"indent":  indent,
+	"nindent": nindent,
+}
+
+func indent(spaces int, v string) string {
+	pad := strings.Repeat(" ", spaces)
+	return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+}
+
+func nindent(spaces int, v string) string {
+	return "\n" + indent(spaces, v)
 }
