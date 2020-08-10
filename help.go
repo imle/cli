@@ -8,6 +8,8 @@ import (
 	"text/tabwriter"
 	"text/template"
 	"unicode/utf8"
+
+	"github.com/Masterminds/sprig"
 )
 
 var helpCommand = &Command{
@@ -72,22 +74,22 @@ func ShowAppHelpAndExit(c *Context, exitCode int) {
 
 // ShowAppHelp is an action that displays the help.
 func ShowAppHelp(c *Context) error {
-	template := c.App.CustomAppHelpTemplate
-	if template == "" {
-		template = AppHelpTemplate
+	tpl := c.App.CustomAppHelpTemplate
+	if tpl == "" {
+		tpl = AppHelpTemplate
 	}
 
 	if c.App.ExtraInfo == nil {
-		HelpPrinter(c.App.Writer, template, c.App)
+		HelpPrinter(c.App.Writer, tpl, c.App)
 		return nil
 	}
 
 	customAppData := func() map[string]interface{} {
-		return map[string]interface{}{
-			"ExtraInfo": c.App.ExtraInfo,
-		}
+		res := sprig.FuncMap()
+		res["ExtraInfo"] = c.App.ExtraInfo
+		return res
 	}
-	HelpPrinterCustom(c.App.Writer, template, c.App, customAppData())
+	HelpPrinterCustom(c.App.Writer, tpl, c.App, customAppData())
 
 	return nil
 }
