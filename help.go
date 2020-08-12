@@ -371,6 +371,7 @@ func checkCommandCompletions(c *Context, name string) bool {
 var funcMap = map[string]interface{}{
 	"indent":  indent,
 	"nindent": nindent,
+	"trim":    strings.TrimSpace,
 }
 
 func indent(spaces int, v string) string {
